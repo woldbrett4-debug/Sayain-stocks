@@ -125,6 +125,8 @@
 const dpr = window.devicePixelRatio || 1;
 const w = chart.clientWidth;
 const h = chart.clientHeight;
+    if (!w || !h) return;
+console.log('Chart dimensions:', w, h);
 
 canvas.width = w * dpr;
 canvas.height = h * dpr;
