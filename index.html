@@ -228,7 +228,8 @@ ctx.fillText('⚡ SAIYAN MODE', 15, h - 15);
   document.getElementById('addTicker').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('add').click(); });
 
   window.addEventListener('load', () => {
-  setTimeout(() => loadChart('HTZ'), 200);
+  const chart = document.getElementById('chart');
+  chart.innerHTML = '<div style="background:#030611;color:#20f58a;padding:30px;font-size:24px;height:300px;">SAIYAN STOCKS WORKING ⚡</div>';
 });
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
     window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(()=>{}));
