@@ -120,7 +120,8 @@
   tickerInput.
 
   chart.innerHTML = '';
-
+const canvas = document.createElement('canvas');
+chart.appendChild(canvas);
   const ctx = canvas.getContext('2d');
 const dpr = window.devicePixelRatio || 1;
 const w = chart.clientWidth;
