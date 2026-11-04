@@ -125,7 +125,8 @@ chart.appendChild(canvas);
   const ctx = canvas.getContext('2d');
 const dpr = window.devicePixelRatio || 1;
 const w = chart.clientWidth;
-const h = chart.clientHeight;
+const h = chart.clientHeight || 350;
+chart.style.height = '350px';
     if (!w || !h) return;
 console.log('Chart dimensions:', w, h);
 
