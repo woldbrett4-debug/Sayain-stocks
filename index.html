@@ -222,7 +222,9 @@ ctx.fillText('⚡ SAIYAN MODE', 15, h - 15);
   });
   document.getElementById('addTicker').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('add').click(); });
 
-  loadChart('HTZ');
+  window.addEventListener('load', () => {
+  setTimeout(() => loadChart('HTZ'), 200);
+});
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
     window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(()=>{}));
   }
