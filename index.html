@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#050817">
+  <meta name="description" content="Dragon Ball Z inspired live stock chart dashboard">
+  <link rel="manifest" href="manifest.webmanifest">
+  <title>Saiyan Stocks — HTZ Live Chart</title>
+  <style>
+    :root { color-scheme: dark; --cyan:#00d9ff; --purple:#a855f7; --green:#20f58a; }
+    * { box-sizing:border-box }
+    html,body { margin:0; width:100%; min-height:100%; background:#030611; color:#fff; font-family:Arial,Helvetica,sans-serif; }
+    body { min-height:100svh; }
+    .screen {
+      position:relative; min-height:100svh; overflow:hidden;
+      background-image:linear-gradient(180deg,rgba(1,5,18,.12),rgba(1,5,18,.18)),url("assets/dbz-background.jpg");
+      background-size:100% 100%; background-position:center top; background-repeat:no-repeat;
+      padding: env(safe-area-inset-top) 12px calc(12px + env(safe-area-inset-bottom));
+    }
+    .topbar { display:flex; justify-content:space-between; align-items:center; padding:8px 4px; text-shadow:0 2px 8px #000; }
+    .brand { font-weight:900; letter-spacing:1.5px; color:#fff; font-size:13px; }
+    .live { color:var(--green); font-size:11px; font-weight:800; letter-spacing:1px; }
+    .live:before { content:""; display:inline-block; width:7px;height:7px;border-radius:50%;background:var(--green);margin-right:6px;box-shadow:0 0 9px var(--green); }
+    .ticker-panel {
+      margin:clamp(95px,17vh,155px) auto 0; width:min(92%,560px); padding:10px 12px;
+      background:rgba(3,8,24,.94); border:1px solid var(--cyan); border-radius:14px;
+      box-shadow:0 0 16px rgba(0,217,255,.42),inset 0 0 14px rgba(0,217,255,.08);
+    }
+    .ticker-row { display:flex; gap:8px; align-items:center; }
+    input {
+      min-width:0; flex:1; border:1px solid #354b75; border-radius:9px; padding:11px 12px;
+      color:#fff; background:#081329; font-size:16px; text-transform:uppercase; outline:none;
+    }
+    button {
+      border:1px solid var(--cyan); border-radius:9px; background:linear-gradient(135deg,#063e71,#30105e);
+      color:#fff; font-weight:800; padding:11px 14px; font-size:14px; box-shadow:0 0 10px #087cbb66;
+    }
+    .hint { color:#b9c8e8; font-size:10px; margin:7px 2px 0; }
+    .chart-shell {
+      width:min(96%,760px); height:clamp(285px,38vh,430px); margin:12px auto 0;
+      border:1px solid var(--cyan); border-radius:13px; overflow:hidden; background:#050914;
+      box-shadow:0 0 18px rgba(0,217,255,.5),0 0 35px rgba(168,85,247,.2);
+    }
+    #chart { width:100%; height:100%; }
+    .watch {
+      width:min(94%,700px); margin:12px auto 0; padding:10px;
+      border:1px solid #a855f7; border-radius:12px; background:rgba(4,7,22,.94);
+      box-shadow:0 0 16px rgba(168,85,247,.38);
+    }
+    .watch-title { text-align:center; font-weight:900; letter-spacing:1px; font-size:13px; margin-bottom:8px; }
+    .chips { display:flex; flex-wrap:wrap; justify-content:center; gap:7px; }
+    .chip { padding:7px 11px; border-radius:20px; border:1px solid #43557e; background:#0a1530; color:#eaf5ff; font-size:12px; }
+    .chip.active { border-color:var(--green); color:var(--green); box-shadow:0 0 9px #20f58a55; }
+    .addrow { display:flex; gap:7px; margin-top:8px; }
+    .addrow input { font-size:13px; padding:8px 10px; }
+    .addrow button { padding:8px 11px; font-size:12px; }
+    .footer { text-align:center; margin:12px 0 4px; color:#ffe56b; font-weight:900; font-size:12px; letter-spacing:1px; text-shadow:0 2px 8px #000; }
+    .notice { text-align:center; color:#d1d8ed; font-size:10px; margin:5px auto 0; max-width:520px; text-shadow:0 1px 4px #000; }
+    @media (max-height:760px) {
+      .ticker-panel { margin-top:12vh; }
+      .chart-shell { height:34vh; min-height:235px; }
+      .watch { margin-top:8px; }
+    }
+  </style>
+</head>
+<body>
+<main class="screen">
+  <div class="topbar">
+    <div class="brand">⚡ SAIYAN STOCKS</div>
+    <div class="live">CHART CONNECTION</div>
+  </div>
+
+  <section class="ticker-panel">
+    <div class="ticker-row">
+      <input id="ticker" value="HTZ" maxlength="15" aria-label="Stock ticker" placeholder="Enter ticker (e.g. HTZ)">
+      <button id="load">LOAD CHART</button>
+    </div>
+    <div class="hint">Search any ticker symbol. The chart below is supplied by TradingView.</div>
+  </section>
+
+  <section class="chart-shell" aria-label="Live stock chart">
+    <div id="chart"></div>
+  </section>
+
+  <section class="watch">
+    <div class="watch-title">✦ MY WATCHLIST ✦</div>
+    <div class="chips" id="chips">
+      <button class="chip active" data-symbol="HTZ">HTZ</button>
+    </div>
+    <div class="addrow">
+      <input id="addTicker" maxlength="15" placeholder="Add ticker symbol">
+      <button id="add">+ ADD</button>
+    </div>
+  </section>
+
+  <div class="footer">POWER UP YOUR PORTFOLIO</div>
+  <div class="notice">Quotes may be delayed depending on exchange and data permissions. Not investment advice.</div>
+</main>
+<script>
+  const tickerInput = document.getElementById('ticker');
+  const chart = document.getElementById('chart');
+  const chips = document.getElementById('chips');
+  const watchlist = ['HTZ'];
+  let active = 'HTZ';
+
+  function loadChart(symbol) {
+    symbol = (symbol || '').trim().toUpperCase().replace(/[^A-Z0-9:._-]/g, '');
+    if (!symbol) return;
+    active = symbol;
+    tickerInput.value = symbol;
+    chart.innerHTML = '';
+    const frame = document.createElement('iframe');
+    const params = new URLSearchParams({
+      symbol: symbol.includes(':') ? symbol : 'NASDAQ:' + symbol,
+      interval: '5',
+      timezone: 'America/Los_Angeles',
+      theme: 'dark',
+      style: '1',
+      locale: 'en',
+      toolbarbg: '050914',
+      hide_top_toolbar: '0',
+      hide_legend: '0',
+      allow_symbol_change: '1',
+      saveimage: '0',
+      hideideas: '1',
+      studies: '[]'
+    });
+    frame.title = 'TradingView chart for ' + symbol;
+    frame.src = 'https://www.tradingview.com/widgetembed/?' + params.toString();
+    frame.style.cssText = 'width:100%;height:100%;border:0;display:block';
+    frame.allow = 'fullscreen';
+    chart.appendChild(frame);
+    [...chips.querySelectorAll('.chip')].forEach(b => b.classList.toggle('active', b.dataset.symbol === symbol));
+  }
+
+  function renderChips() {
+    chips.innerHTML = '';
+    watchlist.forEach(symbol => {
+      const b = document.createElement('button');
+      b.className = 'chip' + (symbol === active ? ' active' : '');
+      b.textContent = symbol;
+      b.dataset.symbol = symbol;
+      b.addEventListener('click', () => loadChart(symbol));
+      chips.appendChild(b);
+    });
+  }
+
+  document.getElementById('load').addEventListener('click', () => loadChart(tickerInput.value));
+  tickerInput.addEventListener('keydown', e => { if (e.key === 'Enter') loadChart(tickerInput.value); });
+  document.getElementById('add').addEventListener('click', () => {
+    const symbol = document.getElementById('addTicker').value.trim().toUpperCase().replace(/[^A-Z0-9:._-]/g, '');
+    if (!symbol) return;
+    if (!watchlist.includes(symbol)) watchlist.push(symbol);
+    document.getElementById('addTicker').value = '';
+    renderChips();
+    loadChart(symbol);
+  });
+  document.getElementById('addTicker').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('add').click(); });
+
+  loadChart('HTZ');
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+  }
+</script>
+</body>
+</html>
